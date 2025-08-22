@@ -1,0 +1,17 @@
+# Core dependencies for artistic generation
+Pillow>=10.0.0
+matplotlib>=3.7.0
+numpy>=1.24.0
+
+# Optional: AI-powered generation (requires significant setup)
+# Uncomment these for Stable Diffusion features:
+# torch>=2.0.0
+# torchvision>=0.15.0
+# torchaudio>=2.0.0
+# diffusers>=0.21.0
+# transformers>=4.21.0
+# accelerate>=0.20.0
+
+# Additional dependencies for extended functionality
+# requests>=2.28.0  # For downloading models
+# safetensors>=0.3.0  # For model loading
