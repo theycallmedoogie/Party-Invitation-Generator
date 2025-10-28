@@ -8,43 +8,66 @@ import torch
 from diffusers import StableDiffusionPipeline
 from PIL import Image, ImageDraw, ImageFont
 import os
+import sys
+sys.path.append('..')
+from error_intelligence import ErrorIntelligence, log_error, safe_print
+
+# Initialize error logging for this project
+error_logger = ErrorIntelligence(project_name="Party_Invitation_Generator")
 
 def check_gpu():
     """Check if CUDA is available"""
-    if torch.cuda.is_available():
-        print(f"GPU available: {torch.cuda.get_device_name(0)}")
-        print(f"VRAM: {torch.cuda.get_device_properties(0).total_memory / 1024**3:.1f} GB")
-        return True
-    else:
-        print("No GPU available, using CPU (will be slow)")
+    try:
+        if torch.cuda.is_available():
+            safe_print(f"GPU available: {torch.cuda.get_device_name(0)}")
+            safe_print(f"VRAM: {torch.cuda.get_device_properties(0).total_memory / 1024**3:.1f} GB")
+            return True
+        else:
+            safe_print("No GPU available, using CPU (will be slow)")
+            return False
+    except Exception as e:
+        log_error("GPUCheckError", str(e), {"torch_version": torch.__version__, "cuda_available": torch.cuda.is_available()})
+        safe_print("Error checking GPU availability, defaulting to CPU")
         return False
 
 def setup_stable_diffusion():
     """Initialize Stable Diffusion pipeline"""
-    print("Loading Stable Diffusion model...")
-    
-    # Use a smaller, faster model for RTX 4060
+    pipe = None
+    device = None
     model_id = "runwayml/stable-diffusion-v1-5"
     
-    # Check if GPU is available
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    
-    # Load pipeline
-    pipe = StableDiffusionPipeline.from_pretrained(
-        model_id,
-        torch_dtype=torch.float16 if device == "cuda" else torch.float32,
-        safety_checker=None,
-        requires_safety_checker=False
-    )
-    
-    pipe = pipe.to(device)
-    
-    # Enable memory efficient attention if available
-    if hasattr(pipe, "enable_attention_slicing"):
-        pipe.enable_attention_slicing()
-    
-    print(f"Model loaded on {device}")
-    return pipe
+    try:
+        safe_print("Loading Stable Diffusion model...")
+        
+        # Check if GPU is available
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        
+        # Load pipeline
+        pipe = StableDiffusionPipeline.from_pretrained(
+            model_id,
+            torch_dtype=torch.float16 if device == "cuda" else torch.float32,
+            safety_checker=None,
+            requires_safety_checker=False
+        )
+        
+        pipe = pipe.to(device)
+        
+        # Enable memory efficient attention if available
+        if hasattr(pipe, "enable_attention_slicing"):
+            pipe.enable_attention_slicing()
+        
+        safe_print(f"Model loaded on {device}")
+        return pipe
+        
+    except Exception as e:
+        log_error("StableDiffusionSetupError", str(e), {
+            "model_id": model_id,
+            "device": device,
+            "torch_version": torch.__version__,
+            "cuda_available": torch.cuda.is_available()
+        })
+        safe_print("Failed to load Stable Diffusion model")
+        return None
 
 def generate_party_image(pipe, prompt, output_path="party_invitation.png"):
     """Generate party invitation image"""
