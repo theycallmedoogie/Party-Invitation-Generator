@@ -3,14 +3,14 @@
 Party Invitation Generator using Stable Diffusion
 Creates photo-realistic party invitation images
 """
+from DevInfrastructure import ErrorIntelligence
+from DevInfrastructure.error_intelligence import log_error, safe_print
 
 import torch
 from diffusers import StableDiffusionPipeline
 from PIL import Image, ImageDraw, ImageFont
 import os
 import sys
-sys.path.append('..')
-from error_intelligence import ErrorIntelligence, log_error, safe_print
 
 # Initialize error logging for this project
 error_logger = ErrorIntelligence(project_name="Party_Invitation_Generator")
